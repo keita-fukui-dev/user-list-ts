@@ -1,121 +1,62 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { AllUsersTable } from './components/AllUsersTable'
+import { FilterBar } from './components/FilterBar'
+import { MentorTable } from './components/MentorTable'
+import { StudentTable } from './components/StudentTable'
+import { TabBar } from './components/TabBar'
+import { UserForm } from './components/UserForm'
+import { USER_LIST } from './data/users'
+import type { NewUser, Tab, User, UserFilter } from './types/user'
+import {
+  filterUsers,
+  getHobbyOptions,
+  getLangOptions,
+} from './utils/filterUsers'
+import { getNextId } from './utils/userForm'
+import { isMentor, isStudent } from './utils/userGuards'
 import './App.css'
 
+const INITIAL_FILTER: UserFilter = { hobby: null, lang: null }
+
 function App() {
-  const [count, setCount] = useState(0)
+  // 新規登録したユーザーも含む一覧。state にだけ持つので、リロードすると USER_LIST に戻る
+  const [users, setUsers] = useState<User[]>(USER_LIST)
+  const [tab, setTab] = useState<Tab>('all')
+  // タブの外に置くので、タブを切り替えても filter は維持される
+  const [filter, setFilter] = useState<UserFilter>(INITIAL_FILTER)
 
+  const handleAdd = (newUser: NewUser) => {
+    setUsers((prev) => [...prev, { ...newUser, id: getNextId(prev) }])
+  }
+
+  // 処理の順序：タブ → filter → ソート（ソートは各テーブルの中で行う）
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    <main className="app">
+      <h1>ユーザー一覧</h1>
+      <UserForm users={users} onAdd={handleAdd} />
+      <FilterBar
+        filter={filter}
+        hobbyOptions={getHobbyOptions(users)}
+        langOptions={getLangOptions(users)}
+        onChange={setFilter}
+      />
+      <TabBar currentTab={tab} onChange={setTab} />
+      {tab === 'all' && (
+        <AllUsersTable displayedUsers={filterUsers(users, filter)} users={users} />
+      )}
+      {tab === 'student' && (
+        <StudentTable
+          students={filterUsers(users.filter(isStudent), filter)}
+          users={users}
+        />
+      )}
+      {tab === 'mentor' && (
+        <MentorTable
+          mentors={filterUsers(users.filter(isMentor), filter)}
+          users={users}
+        />
+      )}
+    </main>
   )
 }
 
