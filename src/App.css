@@ -127,11 +127,11 @@ th {
 }
 
 .form-field input[aria-invalid='true'] {
-  border-color: #d93025;
+  border-color: var(--error);
 }
 
 .form-error {
-  color: #d93025;
+  color: var(--error);
   font-size: 13px;
 }
 
