@@ -10,8 +10,9 @@ export const TextList = ({ items }: Props) => {
 
   return (
     <ul className="text-list">
-      {items.map((item) => (
-        <li key={item}>{item}</li>
+      {/* 同じ文字列が並ぶことがあるので、key に添字も含めて重複を防ぐ */}
+      {items.map((item, index) => (
+        <li key={`${index}-${item}`}>{item}</li>
       ))}
     </ul>
   )
